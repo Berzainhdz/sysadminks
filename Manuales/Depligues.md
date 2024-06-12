@@ -1,42 +1,80 @@
-#Manual Despliegue
-1)Descargar el proyecto .tar.gz de gitlab y guardarlo en cualquier ruta.
+# Manual Despliegue
+    1. Descargar el proyecto archivo.tar.gz del repositorio gitlab y lo guardamos en la ruta deseada en nuestra máquina local.
 
-Posicionandonos en la ruta donde esta guardado y enviar el archivo al contenedor. scp archivo.tar.gz usuario@ip_contenedor:.
+    2. Nos posicionamos en la ruta donde está guardado el archivo archivo.tar.gz y lo enviamos al contenedor:   
+        * scp archivo.tar.gz usuario@ip_contenedor:.
 
-Entrar al contenedor. ssh usuario@ip_contenedor
+    3. Entramos al contenedor.
+        * ssh usuario@ip_contenedor 
 
-Descomprimir el proyecto. sudo tar -xzvf archivo.tar.gz
+    4. Descomprimimos el archivo del proyecto (podemos hacerlo como superusuario si es necesario):
+        * sudo tar -xzvf archivo.tar.gz
 
-Renorbrar el proyecto. mv archivo_descomprimido nombre_nuevo
+    5. Renonbramos el proyecto. 
+        *mv archivo_descomprimido nombre-nuevo
 
-Mover el proyecto a la carpeta /var/www o /home/proyecto sudo mv nombre_nuevo /var/www sudo mv nombre_nuevo /home/proyecto
+    6. Mover el proyecto a la carpeta /var/www o /home/proyecto 
+        * sudo mv nombre-nuevo /var/www 
+        * sudo mv nombre-nuevo /home/proyecto
 
-Entrar al proyecto anterior cd /var/www/proyecto-anterior o cd /home/proeycto/proyecto-anterior
+    7. Entramos al proyecto anterior para pasar los archivos necesarios que se muestran en el paso siguiente. 
+        * cd /var/www/proyecto-anterior 
+        * cd /home/proyecto/proyecto-anterior
 
-Copiar los archivos necesarios.
+    8. Copiar los archivos necesarios.
+        Escolares: 
+            * sudo cp Gemfile Gemfile.lock .ruby_version ../nombre-nuevo-test-version/ 
+            * cd public 
+                * sudo cp -r estancias_docs servicio_social_docs ../../nombre-nuevo-test-version/public/ 
+            * cd ../config 
+                * sudo cp database.yml ../../nombre-nuevo-test-version/config/ 
+            * cd initializers/ 
+                * sudo cp secret_token.rb ../../../nombre-nuevo-test-version/config/initializers/
 
-Escolares: sudo cp Gemfile Gemfile.lock config.ru ../nes-escolares-test-version/ cd public sudo cp -r estancias_docs servicio_social_docs ../../nes-escolares-test-version/public/ cd ../config sudo cp database.yml ../../nes-escolares-test-version/config/ cd initializers/ sudo cp secret_token.rb ../../../nes-escolares-test-version/config/initializers/
+        Los demás proyectos: 
+            * sudo cp Gemfile Gemfile.lock ../nombre-nuevo-test-version/ 
+            * cd config 
+                * sudo cp database.yml secrets.yml ../../nombre-nuevo-test-version/config/ 
+            * cd initializers/ 
+                * sudo cp assets.rb ../../../nombre-nuevo-test-version/config/initializers/ 
+            * cd ../environments 
+                * sudo cp production.rb ../../../nombre-nuevo-test-version/config/environments/
 
-Los demás proyectos: sudo cp Gemfile Gemfile.lock ../nes-alumnos-version/ cd config sudo cp database.yml secrets.yml ../../nes-alumnos-version/config/ cd initializers/ sudo cp assets.rb ../../../nes-alumnos-version/config/initializers/ cd ../environments sudo cp production.rb ../../../nes-alumnos-version/config/environments/
+    9. Regresar a donde estan todos los proyectos.
+        * cd /var/www
+        * cd /home/proyecto
 
-Regresar a donde estan todos los proyectos cd /var/www o /home/proyecto
+    10. Darle los permisos correspondientes a todos los archivos del proyecto. 
+        * sudo chmod -R 755 nombre-nuevo-test-version 
+        * sudo chown -R usuario:grupo nombre-nuevo-test-version
 
-Darle los permisos correspondientes a todos los archivos del proyecto. sudo chmod -R 755 nes-sistema-test-version sudo chown -R escolares:escolares nes-sistema-test-version
+    11. Eliminar enlace simbólico. 
+        * sudo unlink nombre-proyecto-test
 
-Eliminar enlace simbólico. sudo unlink nes-escolares-test
+    11. Crear el nuevo enlace simbólico con la nueva versión a desplegar. 
+        * sudo ln -s nombre-nuevo-test-version nombre-proyecto-test
 
-Crear el nuevo enlace simbólico con la nueva versión a desplegar. sudo ln -s nes-sistema-test-version nes-sistema-test
+    12. Entramos al enlace simbolico creado.
+    
+    13. Ejecutamos (bundle install)
 
-13)Ejecutamos bundle install
+    14. Existen tareas paraa restablecer las contraseñas de admin en escolares e alumnos.
+        * Escolares:
+            * bundle exec rake nes:reset_admin RAILS_ENV=production
+        * Alumnos:
+            * bundle exec rake users:reset_password_admin RAILS_ENV=production
+    
+    15. Ejecutamos las identidades instucionales:
+        * Escolares: sudo ./identidad-institucional-nes.sh Universidad
+        * Inscripciones: sudo ./identidad-institucional-inscripciones.sh Universidad
+        * Financieros: sudo ./identidad-institucional-financieros.sh Universidad
+        * Alumnos: sudo ./identidad-institucional-alumnos.sh Universidad
+        * Adeudos: sudo ./identidad-institucional-adeudos.sh Universidad
 
-cd nes-alumnos-suneo-4-3.0.23-alpha.1
+     16. Ojo para Alumnos, Inscripciones, Financieros, Adeudos o Idiomas sólo en caso que no aparezcan los estilos solo ejecutar
+        * rake assets:clean RAILS_ENV=production o rake assets:clean RAILS_ENV=development
+        * rake assets:clobber RAILS_ENV=production o rake assets:clobber RAILS_ENV=development
+        * rake assets:precompile RAILS_ENV=production o rake assets:precompile RAILS_ENV=development
 
-En caso de despliegue de ESCOLARES: sudo ./identidad-institucional-nes.sh utm
-En caso de despliegue de FINANCIEROS: sudo ./identidad-institucional-financieros.sh utm
-En caso de despliegue de ALUMNOS: sudo ./identidad-institucional-alumnos.sh unsis
-En caso de despliegue de ADEUDOS: sudo ./identidad-institucional-adeudos.sh uncos
-Para Alumnos, Inscripciones, Financieros, Adeudos o Idiomas sólo en caso que no aparezcan los estilos rake assets:clean RAILS_ENV=production rake assets:clobber RAILS_ENV=production rake assets:precompile RAILS_ENV=production
-
-Reiniciar Nginx. sudo systemctl restart nginx
-
-verificar los database.yml que apunten a la base de datos correcta.
+    17. Reiniciar Nginx. 
+        * sudo systemctl restart nginx
